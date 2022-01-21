@@ -47,7 +47,7 @@ type TrieTree struct {
 	root *Node
 }
 
-func (tree *TrieTree) AddPath(pattern string, parts []string) error {
+func (tree *TrieTree) addPath(pattern string, parts []string) error {
 	ptr := tree.root
 
 	// match parts
@@ -81,7 +81,7 @@ func (tree *TrieTree) AddPath(pattern string, parts []string) error {
 	return nil
 }
 
-func (tree *TrieTree) MatchPath(pathParts []string) (*Node, bool) {
+func (tree *TrieTree) matchPath(pathParts []string) (*Node, bool) {
 	ptr := tree.root
 
 	// split path
@@ -110,7 +110,7 @@ func (tree *TrieTree) MatchPath(pathParts []string) (*Node, bool) {
 	return ptr, result
 }
 
-func NewTree() *TrieTree {
+func newTrieTree() *TrieTree {
 	return &TrieTree{
 		root: newNode("/", "", exactMatch),
 	}

@@ -38,14 +38,14 @@ func parsePattern(pattern string) []string {
 func (r *Router) addRoute(method string, pattern string, handler HandlerFunc) {
 	log.Printf("[Router] Routing %4s, %s", method, pattern)
 	if _, ok := r.trees[method]; !ok {
-		r.trees[method] = *NewTree()
+		r.trees[method] = *newTrieTree()
 	}
 
 	parts := parsePattern(pattern)
 	tree := r.trees[method]
 	key := method + "-" + pattern
 
-	tree.AddPath(pattern, parts)
+	tree.addPath(pattern, parts)
 	r.router[key] = handler
 }
 
@@ -72,10 +72,10 @@ func (r *Router) handleContext(ctx *Context) {
 	tree, hasSuchMethod := r.trees[ctx.Method]
 	parts := parsePattern(ctx.Path)
 	if !hasSuchMethod {
-		r.trees[ctx.Method] = *NewTree()
+		r.trees[ctx.Method] = *newTrieTree()
 	}
 
-	if node, ok := tree.MatchPath(parts); ok {
+	if node, ok := tree.matchPath(parts); ok {
 		key := ctx.Method + "-" + node.pattern
 		if handler, ok := r.router[key]; ok {
 			log.Printf("[Router] %s Matched> %s ==> %s", ctx.Method, ctx.Path, node.pattern)
