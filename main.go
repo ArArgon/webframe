@@ -35,7 +35,12 @@ func main() {
 	})
 
 	engine.GET("/path3/:hybrid/*match", func(c *lib.Context) {
-		c.String(400, "Catch-all match success: %v", c.Params)
+		c.String(400, "Hybrid matches success: %v", c.Params)
+	})
+
+	v1 := engine.CreateSubGroup("/v1")
+	v1.GET("/path4/:hybrid/*match", func(c *lib.Context) {
+		c.String(400, "Hybrid matches in control group success: %v", c.Params)
 	})
 
 	log.Printf("[Main] Engine launching...")

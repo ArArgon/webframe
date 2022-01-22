@@ -5,16 +5,9 @@ import (
 )
 
 type Engine struct {
-	router *Router
-}
-
-// primitive way of mapping paths
-func (e *Engine) GET(pattern string, handler HandlerFunc) {
-	e.router.addRoute("GET", pattern, handler)
-}
-
-func (e *Engine) POST(pattern string, handler HandlerFunc) {
-	e.router.addRoute("POST", pattern, handler)
+	*RouterGroup // Engine itself has all capabilities of a group
+	router       *Router
+	allGroups    []*RouterGroup
 }
 
 func (e *Engine) SetNotFound(handler HandlerFunc) {
@@ -30,9 +23,14 @@ func (e *Engine) Run(addr string) (err error) {
 }
 
 func New() *Engine {
-	return &Engine{
+	result := &Engine{
 		router: newRouter(func(ctx *Context) {
 			ctx.HTML(404, "<html> <head> <title>Error</title> </head> <body> <h1>"+ctx.Path+": 404 Not Found</h1> </body> </html>\r\n")
 		}),
 	}
+	// Engine's group: supreme group
+	result.RouterGroup = &RouterGroup{engine: result}
+	// The only group
+	result.allGroups = []*RouterGroup{result.RouterGroup}
+	return result
 }

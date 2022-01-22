@@ -36,7 +36,7 @@ func parsePattern(pattern string) []string {
 }
 
 func (r *Router) addRoute(method string, pattern string, handler HandlerFunc) {
-	log.Printf("[Router] Routing %4s, %s", method, pattern)
+	log.Printf("[Router] Routing %s, %s", method, pattern)
 	if _, ok := r.trees[method]; !ok {
 		r.trees[method] = *newTrieTree()
 	}
