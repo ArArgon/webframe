@@ -1,10 +1,17 @@
 package lib
 
+import (
+	"net/http"
+	"path"
+	"strconv"
+)
+
 type RouterGroup struct {
-	prefix      string
-	middlewares []HandlerFunc
-	parantGrp   *RouterGroup
-	engine      *Engine
+	prefix        string
+	middlewares   []HandlerFunc
+	parantGrp     *RouterGroup
+	engine        *Engine
+	staticCounter int
 }
 
 func (grp *RouterGroup) CreateSubGroup(prefix string) *RouterGroup {
@@ -34,4 +41,29 @@ func (grp *RouterGroup) GET(pattern string, handler HandlerFunc) {
 
 func (grp *RouterGroup) POST(pattern string, handler HandlerFunc) {
 	grp.AddRoute("POST", pattern, handler)
+}
+
+/*
+	relativePath:	url part related to current group
+	rootPath: 		root path of static resources directory
+*/
+func (grp *RouterGroup) Static(relativePath string, rootPath string, strictMode bool) {
+	param := "/*filepath" + strconv.Itoa(grp.staticCounter)
+	pattern := path.Join(relativePath, param)
+	absPathPrefix := path.Join(grp.prefix, relativePath)
+
+	fileSystem := http.Dir(rootPath) // open
+	// File Server: a handler that serves as a normal static web engine
+	fileServer := http.StripPrefix(absPathPrefix, http.FileServer(fileSystem))
+	grp.AddRoute("GET", pattern, func(c *Context) {
+		file := c.Params[param]
+		if _, err := fileSystem.Open(file); err != nil {
+			// 404 not found
+			c.SetStatusCode(http.StatusNotFound)
+			return
+		}
+		// delegate the context to the file server
+		fileServer.ServeHTTP(c.Writer, c.Request)
+	})
+	grp.staticCounter++
 }

@@ -47,6 +47,8 @@ func main() {
 		panic("A deliberate panic trap")
 	})
 
+	v1.Static("/assets", "./static", false)
+
 	log.Printf("[Main] Engine launching...")
 	log.Fatal(engine.Run(":9000"))
 }
