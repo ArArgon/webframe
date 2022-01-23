@@ -15,6 +15,10 @@ type Context struct {
 	Method     string
 	StatusCode int
 	Params     map[string]string
+
+	// Middleware support
+	Middlewares []HandlerFunc
+	MidIndex    int
 }
 type HandlerFunc func(*Context)
 
@@ -57,6 +61,14 @@ func (c *Context) HTML(code int, html string) {
 	c.SetStatusCode(code)
 	c.SetHeader("Content-Type", "text/html")
 	c.Writer.Write([]byte(html))
+}
+
+func (ctx *Context) Next() {
+
+}
+
+func (ctx *Context) Fail(code int, message string) {
+	ctx.JSON(code, JSONObject{"errMessage": message})
 }
 
 func newContext(
