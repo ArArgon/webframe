@@ -16,9 +16,9 @@ type Context struct {
 	StatusCode int
 	Params     map[string]string
 
-	// Middleware support
-	Middlewares []HandlerFunc
-	MidIndex    int
+	// Middleware support: user-level handlers together with middlewares
+	Handlers []HandlerFunc
+	HndlrIdx int
 }
 type HandlerFunc func(*Context)
 
@@ -63,11 +63,23 @@ func (c *Context) HTML(code int, html string) {
 	c.Writer.Write([]byte(html))
 }
 
+// Middlewares are appended to the context in ServeHTTP() when a request is processed.
+// ServeHTTP will traverse every group and append its middlewares if the request is in the charge of it.
+// Next() will be called in router.handle(*Context) after the user-level handle has been appended.
 func (ctx *Context) Next() {
-
+	size := len(ctx.Handlers)
+	// Notice: MidIndex begins with -1
+	// Counter increments each time Next() is called
+	// 		=> ensure every Handler can only be called once
+	for ctx.HndlrIdx++; ctx.HndlrIdx < size; ctx.HndlrIdx++ {
+		ctx.Handlers[ctx.HndlrIdx](ctx)
+	}
 }
 
 func (ctx *Context) Fail(code int, message string) {
+	// halt the execution chain of middleware
+	// immediately step out of the current request
+	ctx.HndlrIdx = len(ctx.Handlers)
 	ctx.JSON(code, JSONObject{"errMessage": message})
 }
 
@@ -75,10 +87,11 @@ func newContext(
 	writer http.ResponseWriter,
 	req *http.Request) *Context {
 	return &Context{
-		Writer:  writer,
-		Request: req,
-		Path:    req.URL.Path,
-		Method:  req.Method,
-		Params:  make(map[string]string),
+		Writer:   writer,
+		Request:  req,
+		Path:     req.URL.Path,
+		Method:   req.Method,
+		Params:   make(map[string]string),
+		HndlrIdx: -1, // Handler index begins with -1 since Next() is called outside the context.
 	}
 }

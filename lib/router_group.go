@@ -17,6 +17,10 @@ func (grp *RouterGroup) CreateSubGroup(prefix string) *RouterGroup {
 	return result
 }
 
+func (grp *RouterGroup) AppendMiddilewares(middlewares ...HandlerFunc) {
+	grp.middlewares = append(grp.middlewares, middlewares...)
+}
+
 // Route binding now moves to here, so that groups control access
 
 func (grp *RouterGroup) AddRoute(method, pattern string, handler HandlerFunc) {

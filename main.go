@@ -43,6 +43,10 @@ func main() {
 		c.String(400, "Hybrid matches in control group success: %v", c.Params)
 	})
 
+	v1.GET("/panic", func(c *lib.Context) {
+		panic("A deliberate panic trap")
+	})
+
 	log.Printf("[Main] Engine launching...")
 	log.Fatal(engine.Run(":9000"))
 }

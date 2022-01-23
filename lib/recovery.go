@@ -9,6 +9,7 @@ import (
 )
 
 func printStackTrace(err interface{}) string {
+	var builder strings.Builder
 	var pcAddrs [32]uintptr
 	pos := runtime.Callers(3, pcAddrs[:]) // skip 3 callers
 	/*
@@ -18,7 +19,6 @@ func printStackTrace(err interface{}) string {
 					|defer func() {...}	 |	caller 1
 						|printStackTrace()	<== current position
 	*/
-	var builder strings.Builder
 	builder.WriteString(fmt.Sprintf("\nPanic: %v\n\n", err))
 	for _, pc := range pcAddrs[:pos] {
 		fn := runtime.FuncForPC(pc)   // retrieve function from its PC address
@@ -30,6 +30,8 @@ func printStackTrace(err interface{}) string {
 
 func Recovery() HandlerFunc {
 	return func(ctx *Context) {
+		// recovery will only happen when engine panics
+		// the following defer func() will be called when handler chain finishied or engine panics
 		defer func() {
 			if err := recover(); err != nil {
 				// successfully recovered from a panic

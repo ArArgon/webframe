@@ -75,16 +75,20 @@ func (r *Router) handleContext(ctx *Context) {
 		r.trees[ctx.Method] = *newTrieTree()
 	}
 
+	// kick off the handler chain before function returns
+	defer ctx.Next()
+
 	if node, ok := tree.matchPath(parts); ok {
 		key := ctx.Method + "-" + node.pattern
 		if handler, ok := r.router[key]; ok {
 			log.Printf("[Router] %s Matched> %s ==> %s", ctx.Method, ctx.Path, node.pattern)
 			ctx.Params = procWildcard(node.pattern, parts)
-			handler(ctx)
+			// handler(ctx)
+			ctx.Handlers = append(ctx.Handlers, handler)
 			return
 		}
 	}
 	// Not Found
 	log.Printf("[Router] %s Unmatched> %s", ctx.Method, ctx.Path)
-	r.notFound(ctx)
+	ctx.Handlers = append(ctx.Handlers, r.notFound)
 }

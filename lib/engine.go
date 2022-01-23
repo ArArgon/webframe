@@ -2,6 +2,7 @@ package lib
 
 import (
 	"net/http"
+	"strings"
 )
 
 type Engine struct {
@@ -15,7 +16,14 @@ func (e *Engine) SetNotFound(handler HandlerFunc) {
 }
 
 func (e *Engine) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
-	e.router.handleContext(newContext(rw, r))
+	// append middlewares
+	requestCtx := newContext(rw, r)
+	for _, group := range e.allGroups {
+		if strings.HasPrefix(r.URL.Path, group.prefix) {
+			requestCtx.Handlers = append(requestCtx.Handlers, group.middlewares...)
+		}
+	}
+	e.router.handleContext(requestCtx)
 }
 
 func (e *Engine) Run(addr string) (err error) {
@@ -32,5 +40,7 @@ func New() *Engine {
 	result.RouterGroup = &RouterGroup{engine: result}
 	// The only group
 	result.allGroups = []*RouterGroup{result.RouterGroup}
+	// enable panic recovery support
+	result.AppendMiddilewares(Recovery())
 	return result
 }
